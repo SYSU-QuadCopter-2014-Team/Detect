@@ -74,7 +74,10 @@ int main(int argc, char* argv[]){
 	int framesToDetect = 72;
 	int ROIPadding = 20;
 	
-	MultiDetect md(framesToDetect, ROIPadding, true);
+	//See outputs
+	bool verbose;
+	
+	MultiDetect md(framesToDetect, ROIPadding, verbose);
 	// Perform Object Detection
 	while ( getline(listFramesFile, frameName) && nFrames < framesToDetect ){
 		
