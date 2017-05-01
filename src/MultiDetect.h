@@ -2,7 +2,7 @@
 
 #include <opencv2/core/core.hpp>
 #include "detect.hpp"
-#include "SvmTest.hpp"
+
 using namespace cv;
 using namespace std;
 
@@ -49,7 +49,7 @@ private:
 	
 	vector<int> detectRes;
 	
-	SvmTest svm;
+	CvSVM svm;
 	
 private:
 	

@@ -58,12 +58,13 @@ Rect MultiDetect::getInitBBox() {
 	
 	int truth = -1;
 	if (!ROIHogs.empty()){
-		svm = SvmTest(ROIHogs[0].size(), "./SVMModel.xml");
+		svm.load("./SVMModel.xml");
 		
 		for (int i = 0; i < ROIHogs.size(); i++) {
-			
-			int response = svm.test(ROIHogs[i].data());
+			Mat sampleMat(1, ROIHogs[i].size(), CV_32FC1, ROIHogs[i].data());
+			int response = svm.predict(sampleMat);
 			detectRes.push_back(response);
+			cout << i << "th ROI response: " << response << endl;
 			if (response == 1)
 				truth = i;
 			
@@ -149,7 +150,7 @@ void MultiDetect::voteForStackedRegion() {
 	
 	normalize(localMaxi, localMaxi, 0, 255, NORM_MINMAX);
 	
-	float thold = 0;
+	float thold = 0.5;
 	
 	threshold( localMaxi, localMaxi, 255 * thold, 255, 0 );
 	
