@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 
 #include <opencv2/core/core.hpp>
 #include "MultiDetect.h"
@@ -52,7 +53,7 @@ Rect MultiDetect::getInitBBox() {
 	//Default Bounding box, center of image, width and height of 60 pixel.
 	Rect initBBox = Rect(
 		Point(unresized.cols/2 - 30, unresized.rows/2 - 30), 
-		Point(unresized.cols/2 - 30, unresized.rows/2 - 30)
+		Point(unresized.cols/2 + 30, unresized.rows/2 + 30)
 			);
 	
 	int truth = -1;
@@ -70,8 +71,35 @@ Rect MultiDetect::getInitBBox() {
 	}
 	
 	if (truth == -1){
-		cout << "Undetected!" << endl;
-		return initBBox;
+		cout << "Undetected! Initiating fail safe..." << endl;
+		
+		int centerMinGrid = -1;
+		float distMinCenter = numeric_limits<float>::max();
+		
+		Point center(unresized.cols/2, unresized.rows/2);
+		
+		cout << stackedGrids.size() << endl;
+		
+		for (int i = 0; i < stackedGrids.size(); i++) {
+			Point gridCenter(stackedGrids[i].x + stackedGrids[i].width/2,
+				stackedGrids[i].y + stackedGrids[i].height/2);
+				
+				double dist = norm(gridCenter - center);
+				cout << dist << endl;
+				if (dist < distMinCenter) {
+					distMinCenter = dist;
+					centerMinGrid = i;
+				}
+				
+		}
+		
+		if (centerMinGrid != -1) {
+			cout << "Found center box, using closest center box as initbbox" << endl;
+			truth = centerMinGrid;
+		} else {
+			cout << "Not found center box, use default box as initbbox" << endl;
+			return initBBox;
+		}
 	}
 
 	cout << "Object Detected!" << endl;
@@ -87,10 +115,17 @@ Rect MultiDetect::getInitBBox() {
 
 	cout << "fc: " << fc << " fr: " << fr << endl;
 
+	int refine = 10;
+
 	initBBox.x *= fc;
 	initBBox.width *= fc;
 	initBBox.y *= fr;
 	initBBox.height *= fr;
+	
+	initBBox.x += refine;
+	initBBox.width -= refine;
+	initBBox.y += refine;
+	initBBox.height -= refine;
 	
 	return initBBox;
 	
@@ -114,7 +149,9 @@ void MultiDetect::voteForStackedRegion() {
 	
 	normalize(localMaxi, localMaxi, 0, 255, NORM_MINMAX);
 	
-	threshold( localMaxi, localMaxi, 255 * 0.5, 255, 0 );
+	float thold = 0;
+	
+	threshold( localMaxi, localMaxi, 255 * thold, 255, 0 );
 	
 	if(verbose){
 		
@@ -217,7 +254,7 @@ void MultiDetect::getGrids()
 		box.width = max_x - min_x + 1;
 		box.height = max_y - min_y + 1;
 		// 限制box的大小
-		if (box.width >= 30 && box.height >= 30 &&
+		if (box.width >= 10 && box.height >= 10 &&
 			box.width <= 0.3 * frame.cols && box.height <= 0.3 * frame.rows)
 			stackedGrids.push_back(box);
 	}

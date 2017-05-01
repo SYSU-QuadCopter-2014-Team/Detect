@@ -75,7 +75,7 @@ int main(int argc, char* argv[]){
 	int ROIPadding = 20;
 	
 	//See outputs
-	bool verbose;
+	bool verbose = true;
 	
 	MultiDetect md(framesToDetect, ROIPadding, verbose);
 	// Perform Object Detection
